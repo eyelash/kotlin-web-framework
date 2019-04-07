@@ -1,3 +1,8 @@
+import kotlin.browser.*
+
 fun main() {
-	console.log("hello")
+	document.title = "kotlin-webframework"
+	val element = document.createElement("h1")
+	element.appendChild(document.createTextNode("hello"))
+	document.body?.appendChild(element)
 }
