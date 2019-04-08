@@ -52,6 +52,37 @@ class MyElement(val root: Element) {
 	fun click(handler: () -> Unit) {
 		root.addEventListener("click", { handler() })
 	}
+
+	fun div_if(condition: Stream<Boolean>, block: MyElement.() -> Unit) {
+		var element = document.createElement("div")
+		if (condition.value) {
+			MyElement(element).block()
+		}
+		condition.addObserver { value ->
+			val oldElement = element
+			element = element.cloneNode(false) as Element
+			if (value) {
+				MyElement(element).block()
+			}
+			root.replaceChild(element, oldElement)
+		}
+		root.appendChild(element)
+	}
+	fun <T, L: List<T>> div_foreach(list: Stream<L>, block: MyElement.(T) -> Unit) {
+		var element = document.createElement("div")
+		for (t in list.value) {
+			MyElement(element).block(t)
+		}
+		list.addObserver { value ->
+			val oldElement = element
+			element = element.cloneNode(false) as Element
+			for (t in value) {
+				MyElement(element).block(t)
+			}
+			root.replaceChild(element, oldElement)
+		}
+		root.appendChild(element)
+	}
 }
 
 fun run(block: MyElement.() -> Unit) {
