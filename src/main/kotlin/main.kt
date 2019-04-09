@@ -1,10 +1,15 @@
 import kotlin.browser.*
 import org.w3c.dom.*
 
-class Stream<T>(value: T) {
+interface Observable<T> {
+	val value: T
+	fun addObserver(observer: (T) -> Unit)
+}
+
+class Model<T>(value: T): Observable<T> {
 	private val observers = ArrayList<(T) -> Unit>()
 	private var cachedValue = value
-	var value
+	override var value
 		get() = cachedValue
 		set(newValue) {
 			if (newValue != cachedValue) {
@@ -14,7 +19,7 @@ class Stream<T>(value: T) {
 				}
 			}
 		}
-	fun addObserver(observer: (T) -> Unit) {
+	override fun addObserver(observer: (T) -> Unit) {
 		observers.add(observer)
 	}
 }
@@ -39,10 +44,10 @@ class MyElement(val root: Element) {
 	fun text(text: String) {
 		root.appendChild(document.createTextNode(text))
 	}
-	fun text(stream: Stream<String>) {
-		val textNode = document.createTextNode(stream.value)
-		stream.addObserver { text ->
-			textNode.data = text
+	fun text(text: Observable<String>) {
+		val textNode = document.createTextNode(text.value)
+		text.addObserver {
+			textNode.data = text.value
 		}
 		root.appendChild(textNode)
 	}
@@ -53,30 +58,30 @@ class MyElement(val root: Element) {
 		root.addEventListener("click", { handler() })
 	}
 
-	fun div_if(condition: Stream<Boolean>, block: MyElement.() -> Unit) {
+	fun div_if(condition: Observable<Boolean>, block: MyElement.() -> Unit) {
 		var element = document.createElement("div")
 		if (condition.value) {
 			MyElement(element).block()
 		}
-		condition.addObserver { value ->
+		condition.addObserver {
 			val oldElement = element
 			element = element.cloneNode(false) as Element
-			if (value) {
+			if (condition.value) {
 				MyElement(element).block()
 			}
 			root.replaceChild(element, oldElement)
 		}
 		root.appendChild(element)
 	}
-	fun <T, L: List<T>> div_foreach(list: Stream<L>, block: MyElement.(T) -> Unit) {
+	fun <T, L: List<T>> div_foreach(list: Observable<L>, block: MyElement.(T) -> Unit) {
 		var element = document.createElement("div")
 		for (t in list.value) {
 			MyElement(element).block(t)
 		}
-		list.addObserver { value ->
+		list.addObserver {
 			val oldElement = element
 			element = element.cloneNode(false) as Element
-			for (t in value) {
+			for (t in list.value) {
 				MyElement(element).block(t)
 			}
 			root.replaceChild(element, oldElement)
@@ -89,7 +94,7 @@ fun run(block: MyElement.() -> Unit) {
 	MyElement(document.body!!).block()
 }
 
-val myText = Stream<String>("Hello")
+val myText = Model<String>("Hello")
 
 fun main() = run {
 	title("kotlin-webframework")
