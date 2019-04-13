@@ -1,5 +1,6 @@
 import kotlin.browser.*
 import org.w3c.dom.*
+import org.w3c.dom.events.*
 
 interface Observable<T> {
 	val value: T
@@ -24,7 +25,20 @@ class Model<T>(value: T): Observable<T> {
 	}
 }
 
-class MyElement(val root: Element) {
+open class MyEventElement<T: EventTarget>(val root: T) {
+	fun on_click(handler: () -> Unit) {
+		root.addEventListener("click", { handler() })
+	}
+	fun on_enter(handler: () -> Unit) {
+		root.addEventListener("keydown", { event ->
+			if ((event as KeyboardEvent).key == "Enter") {
+				handler()
+			}
+		})
+	}
+}
+
+class MyElement(root: Element): MyEventElement<Element>(root) {
 	fun title(title: String) {
 		document.title = title
 	}
@@ -74,9 +88,6 @@ class MyElement(val root: Element) {
 			}
 		}
 	}
-	fun click(handler: () -> Unit) {
-		root.addEventListener("click", { handler() })
-	}
 
 	fun div_if(condition: Observable<Boolean>, block: MyElement.() -> Unit) {
 		var element = document.createElement("div")
@@ -110,24 +121,21 @@ class MyElement(val root: Element) {
 	}
 }
 
-class MyInputElement(val element: HTMLInputElement) {
+class MyInputElement(root: HTMLInputElement): MyEventElement<HTMLInputElement>(root) {
 	fun type(type: String) {
-		element.type = type
+		root.type = type
 	}
 	fun value(value: String) {
-		element.value = value
+		root.value = value
 	}
 	fun value(value: Model<String>) {
-		element.value = value.value
+		root.value = value.value
 		value.addObserver {
-			element.value = value.value
+			root.value = value.value
 		}
-		element.addEventListener("input", {
-			value.value = element.value
+		root.addEventListener("input", {
+			value.value = root.value
 		})
-	}
-	fun onClick(handler: () -> Unit) {
-		element.addEventListener("click", { handler() })
 	}
 }
 
@@ -142,16 +150,20 @@ fun main() = run {
 	}
 	val items = Model<List<String>>(listOf())
 	val currentItem = Model<String>("")
+	val handler = {
+		if (!currentItem.value.isEmpty()) {
+			items.value = items.value + Item(currentItem.value)
+			currentItem.value = ""
+		}
+	}
 	input {
 		value(currentItem)
+		on_enter(handler)
 	}
 	input {
 		type("button")
 		value("add")
-		onClick {
-			items.value = items.value + currentItem.value
-			currentItem.value = ""
-		}
+		on_click(handler)
 	}
 	div_foreach(items) { item ->
 		p {
