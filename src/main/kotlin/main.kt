@@ -60,6 +60,20 @@ class MyElement(val root: Element) {
 	fun classes(vararg classes: String) {
 		root.classList.add(*classes)
 	}
+	fun classes_if(condition: Observable<Boolean>, vararg classes: String) {
+		if (condition.value) {
+			root.classList.add(*classes)
+		} else {
+			root.classList.remove(*classes)
+		}
+		condition.addObserver {
+			if (condition.value) {
+				root.classList.add(*classes)
+			} else {
+				root.classList.remove(*classes)
+			}
+		}
+	}
 	fun click(handler: () -> Unit) {
 		root.addEventListener("click", { handler() })
 	}
