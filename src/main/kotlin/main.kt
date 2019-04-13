@@ -41,6 +41,12 @@ class MyElement(val root: Element) {
 	fun p(block: MyElement.() -> Unit) = appendElement("p", block)
 	fun div(block: MyElement.() -> Unit) = appendElement("div", block)
 
+	fun input(block: MyInputElement.() -> Unit) {
+		val element = document.createElement("input") as HTMLInputElement
+		MyInputElement(element).block()
+		root.appendChild(element)
+	}
+
 	fun text(text: String) {
 		root.appendChild(document.createTextNode(text))
 	}
@@ -87,6 +93,27 @@ class MyElement(val root: Element) {
 			root.replaceChild(element, oldElement)
 		}
 		root.appendChild(element)
+	}
+}
+
+class MyInputElement(val element: HTMLInputElement) {
+	fun type(type: String) {
+		element.type = type
+	}
+	fun value(value: String) {
+		element.value = value
+	}
+	fun value(value: Model<String>) {
+		element.value = value.value
+		value.addObserver {
+			element.value = value.value
+		}
+		element.addEventListener("input", {
+			value.value = element.value
+		})
+	}
+	fun onClick(handler: () -> Unit) {
+		element.addEventListener("click", { handler() })
 	}
 }
 
