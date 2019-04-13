@@ -121,18 +121,27 @@ fun run(block: MyElement.() -> Unit) {
 	MyElement(document.body!!).block()
 }
 
-val myText = Model<String>("Hello")
-
 fun main() = run {
 	title("kotlin-webframework")
 	h1 {
-		text(myText)
-		text("!")
-		click {
-			myText.value = myText.value + "1"
+		text("todo list")
+	}
+	val items = Model<List<String>>(listOf())
+	val currentItem = Model<String>("")
+	input {
+		value(currentItem)
+	}
+	input {
+		type("button")
+		value("add")
+		onClick {
+			items.value = items.value + currentItem.value
+			currentItem.value = ""
 		}
 	}
-	p {
-		text("Welcome to kotlin-webframework!")
+	div_foreach(items) { item ->
+		p {
+			text(item)
+		}
 	}
 }
