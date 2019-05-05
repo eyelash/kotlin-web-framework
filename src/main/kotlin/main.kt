@@ -140,7 +140,9 @@ class MyInputElement(root: HTMLInputElement): MyEventElement<HTMLInputElement>(r
 }
 
 fun run(block: MyElement.() -> Unit) {
-	MyElement(document.body!!).block()
+	document.addEventListener("DOMContentLoaded", {
+		MyElement(document.body!!).block()
+	});
 }
 
 fun main() = run {
