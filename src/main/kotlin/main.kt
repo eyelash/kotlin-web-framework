@@ -146,7 +146,7 @@ fun run(block: MyElement.() -> Unit) {
 }
 
 fun main() = run {
-	title("kotlin-webframework")
+	title("kotlin-web-framework")
 	h1 {
 		text("todo list")
 	}
@@ -154,7 +154,7 @@ fun main() = run {
 	val currentItem = Model<String>("")
 	val handler = {
 		if (!currentItem.value.isEmpty()) {
-			items.value = items.value + Item(currentItem.value)
+			items.value = items.value + currentItem.value
 			currentItem.value = ""
 		}
 	}
